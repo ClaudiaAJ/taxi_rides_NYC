@@ -1,92 +1,111 @@
-# fde22-bonusproject-2
+# FDE Bonus Projects
+
+(c) 2021 Thomas Neumann, Timo Kersten, Alexander Beischl, Maximilian Reif
+
+*Reminder: Use Linux as operating system to work on this project. 
+We cannot provide support for any Windows or macOS related problems.*
+
+---
+## Task 2: Taxi Rides
+
+This project is designed to give you an opportunity to gain experience in programming systems in the Hadoop ecosystem. 
+In this case, we use Spark to analyze [*taxi rides within New York*](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page).
+
+We will use a data set which covers one month. 
+You will find time and location for each trip's start and end. 
+In the following, this is the data that is meant when we refer to a `trip`.
+
+The general question is: Can we match trips and return trips? 
+For a given `trip a`, we consider another `trip b` as a return trip iff:
+1. `b`'s pickup time is within 8 hours after `a`'s dropoff time
+2. `b`'s pickup location is within `r` meters of `a`'s dropoff location
+3. `b`'s dropoff location is within `r` meters of `a`'s pickup location
+
+where `r` is a variable distance in meters that is specified as input to the query. 
+In this project we use values between *50* and *200*.
+
+To compute the return trips, you may want to break the problem down into the following series of problems:
+1. Given the (lat,lon) coordinates: 
+   - `a(40.79670715332031, -73.97093963623047)`
+   - `b(40.789649963378906, -73.94803619384766)`
+   - `c(40.73122024536133,-73.9823226928711)`
+   
+   Which trips have dropoff locations within `r` meters of `a`,`b` or `c`?
+2. For each trip `a` in the dataset, compute the trips that have a pickup location within `r` meters of `a`'s dropoff location. 
+These are the return trip candidates.
+3. For all trips `a` in the dataset, compute all trips that may have been return trips for `a`.
 
 
+Another way to characterize the dataset to be returned would be this pseudo SQL:
+``` 
+SELECT  *
+FROM    tripsProvided a,
+        tripsProvided b
+WHERE   distance(a.dropofflocation, b.pickuplocation) < r
+  and   distance(b.dropofflocation, a.pickuplocation) < r
+  and   a.dropofftime < b.pickuptime
+  and   a.dropofftime + 8 hours > b.pickuptime;
+```
 
-## Getting started
+Please make sure you implement the boundaries for distance and time as specified (e.g., `<` not `<=`).
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+For distance calculations, assume that the earth is a sphere with radius *6371km*.
+Numerical stability of appropriate formulas is discussed, e.g., in this 
+[Wikipedia article](https://en.wikipedia.org/wiki/Great-circle_distance).
+However, you can just use this function:
+```
+val makeDistExpr = (lat1 : Column, lon1 : Column, lat2 : Column, lon2 : Column) => {
+   val dLat = toRadians(abs(lat2 - lat1))
+   val dLon = toRadians(abs(lon2 - lon1))
+   val hav = pow(sin(dLat*0.5),2) + pow(sin(dLon*0.5),2) * cos(toRadians(lat1)) * cos(toRadians(lat2))
+   abs(lit(earthRadius * 2) * asin(sqrt(hav)))
+}
+```
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+To complete this project, submit an implementation that manages to compute this query in **less than 10 minutes**.
+The machine used for evaluation is our submission server with an `Intel Core i7-4770K CPU, 3.50GHz, 4 cores, 8 hyperthreads` 
+and `32GB` of memory.
 
-## Add your files
+---
+### How to submit
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+After forking this project, set it private and update `team.txt` with the same credentials you had in *Bonus Project 1*.
+
+Put your implementation into `ReturnTrips.scala` function `compute` and assure that 
+`ReturnTrips.compute(tripsProvided, dist, sparkContext)` returns a dataset with all trips and their return trips.
+That means, each row in the returned dataset must contain a trip and a return trip, so that all trips in `tripsProvided`
+are returned with their return trips in case they have any.
+
+To test your implementation, install the *prerequisites* (see below) and run: 
+```
+./test.sh
+```
+Alternatively, load the `trips.scala` file into a spark-shell to examine the dataset interactively:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.db.in.tum.de/fde/fde22-bonusproject-2.git
-git branch -M main
-git push -uf origin main
+spark-shell -i trips.scala
 ```
 
-## Integrate with your tools
+If your implementation passes `test.sh`, commit and push your solution to Gitlab.
+This will measure the performance and submit the measured time to the [leaderboard](http://contest.db.in.tum.de).
 
-- [ ] [Set up project integrations](https://gitlab.db.in.tum.de/fde/fde22-bonusproject-2/-/settings/integrations)
+#### Further Tests (optional)
 
-## Collaborate with your team
+If you want to run additional test, e.g., because you pass the `test.sh` but have a wrong result for the leaderboard
+benchmark, you can download this (large) version of the testing dataset:
+[https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-02.csv](https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-02.csv).
+Put the dataset into the `data/` directory and run:
+```
+./testExtended.sh
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+---
+### Prerequisites
 
-## Test and Deploy
+Follow the step-by-step tutorial `Bonus Project 2 Guide` we provide in the Moodle course to setup everything for this project.
 
-Use the built-in continuous integration in GitLab.
+### Some Learning Resources for Spark
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+1. [*An Overview of APIs available in Spark*](https://databricks.com/blog/2016/07/14/a-tale-of-three-apache-spark-apis-rdds-dataframes-and-datasets.html). This is also a description of advantages that the Dataset API offers.
+2. [*Getting started Guide for the Dataset API*](https://spark.apache.org/docs/3.0.3/sql-programming-guide.html).
+3. [*API Documentation*](https://spark.apache.org/docs/3.0.3/api/java/org/apache/spark/sql/Dataset.html). Especially read about the functions *join, select, filter, withColumn, as, explain*.
