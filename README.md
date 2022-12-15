@@ -93,7 +93,7 @@ This will measure the performance and submit the measured time to the [leaderboa
 
 If you want to run additional test, e.g., because you pass the `test.sh` but have a wrong result for the leaderboard
 benchmark, you can download this (large) version of the testing dataset:
-[https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-02.csv](https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-02.csv).
+[https://db.in.tum.de/~reif/uploads/yellow_tripdata_2016-02.csv](https://db.in.tum.de/~reif/uploads/yellow_tripdata_2016-02.csv).
 Put the dataset into the `data/` directory and run:
 ```
 ./testExtended.sh

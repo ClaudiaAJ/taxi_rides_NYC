@@ -61,8 +61,8 @@ object ReturnTripTestExtended {
     println("Run first test: dist = 20")
     println("Your Result: ")
     println(result)
-    if(result != 261634){
-      println("Wrong result for dist = 20. Correct result is 261634.")
+    if(result != 195386){
+      println("Wrong result for dist = 20. Correct result is 195386.")
       System.exit(1);
     } else {
       println("Correct result.")
@@ -73,8 +73,8 @@ object ReturnTripTestExtended {
     println("Run first test: dist = 90")
     println("Your Result: ")
     println(result)
-    if(result != 4851810){ // 4851810
-      println("Wrong result for dist = 90. Correct result is 4851810.")
+    if(result != 3915934){ // 3915934
+      println("Wrong result for dist = 90. Correct result is 3915934.")
       System.exit(1);
     } else {
       println("Correct result.")
@@ -85,8 +85,8 @@ object ReturnTripTestExtended {
     println("Run first test: dist = 150")
     println("Result: ")
     println(result)
-    if(result != 21154948){
-      println("Wrong result for dist = 150. Correct result is 21154948.")
+    if(result != 16908022){
+      println("Wrong result for dist = 150. Correct result is 16908022.")
       System.exit(1);
     } else {
       println("Correct result.")
