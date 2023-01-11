@@ -1,4 +1,4 @@
-Teamname:YourNameHere
-Realname:YourNameHere
-MatrNr:YourMatrikelNrHere
+Teamname:ThisIsMe
+Realname:Claudia Almeida Jordan
+MatrNr: 03776972
 Category:Student
